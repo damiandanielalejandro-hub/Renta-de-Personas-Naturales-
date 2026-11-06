@@ -103,6 +103,32 @@ summary{cursor:pointer;font-weight:500}
 .group .chk{padding:7px 0;border-bottom:1px solid var(--line)}
 textarea.copybox{width:100%;min-height:150px;font-family:var(--font-mono);font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:8px}
 footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.steps{grid-template-columns:minmax(0,1fr)}}
+.steps button{font:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.steps button b{font-family:var(--font-display);font-size:16px}
+.steps button span{font-size:13px;color:var(--muted)}
+.steps button:hover{border-color:var(--accent)}
+.plain{background:var(--accent-soft);border-radius:8px;padding:12px 14px;font-size:15px}
+.plain b{font-family:var(--font-mono);font-weight:500}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.stack i{display:block;height:100%}
+.stack .s1{background:var(--muted)}
+.stack .s2{background:var(--accent)}
+.stack .s3{background:var(--warn)}
+.legend{display:flex;flex-direction:column;gap:5px;font-size:13px;margin-top:8px}
+.legend span{display:flex;gap:8px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.legend em{font-style:normal;display:inline-flex;gap:7px;align-items:center}
+.legend em::before{content:"";width:12px;height:12px;border-radius:3px;background:var(--muted);flex:none}
+.legend .l2 em::before{background:var(--accent)}
+.legend .l3 em::before{background:var(--warn)}
+td .note{font-size:12px;margin-top:2px;font-weight:400}
+.gloss{display:flex;flex-direction:column;gap:8px}
+.gloss details p{margin-top:8px;color:var(--ink)}
+.gloss details .ex{margin-top:6px;font-size:13px;color:var(--muted)}
+.gloss h3{margin:6px 0 2px}
+.linkbtn{font:inherit;font-size:13px;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-align:left}
 @media (prefers-reduced-motion:no-preference){.meter i{transition:width .25s ease}}
 </style>
 
@@ -120,11 +146,19 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     </div>
   </header>
 
+  <nav class="steps" aria-label="Cómo usar esta herramienta">
+    <button type="button" data-goto="declarar"><b>1. Averigüe si debe declarar</b><span>Compare sus cifras con los topes del año.</span></button>
+    <button type="button" data-goto="simulador"><b>2. Calcule su impuesto</b><span>Vea cuánto pagaría y cómo bajarlo dentro de la ley.</span></button>
+    <button type="button" data-goto="checklist"><b>3. Revise antes de presentar</b><span>Lista de verificación con los soportes que debe tener.</span></button>
+  </nav>
+  <p class="note">La UVT es la medida que la DIAN actualiza cada año; por eso los topes cambian de un año a otro. ¿Hay un término que no entiende? Mire la pestaña <button type="button" class="linkbtn" data-goto="conceptos">Conceptos y preguntas</button>. Todo se calcula en su navegador: no se guarda ni se envía nada.</p>
+
   <div class="tabs" role="tablist" aria-label="Secciones">
     <button role="tab" id="t-declarar" data-tab="declarar" aria-selected="true">¿Debo declarar?</button>
     <button role="tab" id="t-simulador" data-tab="simulador" aria-selected="false">Simulador y planeación</button>
     <button role="tab" id="t-checklist" data-tab="checklist" aria-selected="false">Lista de chequeo</button>
     <button role="tab" id="t-tablas" data-tab="tablas" aria-selected="false">Tarifa y topes</button>
+    <button role="tab" id="t-conceptos" data-tab="conceptos" aria-selected="false">Conceptos y preguntas</button>
   </div>
 
   <!-- 1. ¿Debo declarar? -->
@@ -145,7 +179,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   <section class="panel" id="p-simulador" role="tabpanel" aria-labelledby="t-simulador" hidden>
     <div class="card">
       <div><h2>Datos del asalariado</h2><p class="note" style="margin-top:4px">Valores del año completo. <span class="tag">Ejemplo precargado</span></p></div>
-      <div class="field"><label for="s-ing">Ingresos laborales del año</label><input type="text" inputmode="numeric" class="money" id="s-ing" autocomplete="off"><span class="hint">Salario, primas, bonificaciones y demás pagos laborales.</span></div>
+      <div class="field"><label for="s-ing">Ingresos laborales del año</label><input type="text" inputmode="numeric" class="money" id="s-ing" autocomplete="off"><span class="hint">Salario, primas, bonificaciones y demás pagos laborales. Lo encuentra en el certificado de ingresos y retenciones que da su empleador (formulario 220).</span></div>
       <div class="field"><label for="s-incr">Aportes obligatorios a salud y pensión</label><input type="text" inputmode="numeric" class="money" id="s-incr" autocomplete="off"><span class="hint">Se calcula como 8% de los ingresos mientras no lo edite. Use el valor del certificado de ingresos.</span></div>
       <div class="field"><label for="s-cargo">Cargo con gastos de representación</label>
         <select id="s-cargo">
@@ -159,10 +193,10 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
         <div class="field"><label for="s-viv">Intereses de vivienda</label><input type="text" inputmode="numeric" class="money" id="s-viv" autocomplete="off"></div>
         <div class="field"><label for="s-prep">Medicina prepagada</label><input type="text" inputmode="numeric" class="money" id="s-prep" autocomplete="off"></div>
         <div class="field"><label for="s-afc">Aportes voluntarios AFC o pensión</label><input type="text" inputmode="numeric" class="money" id="s-afc" autocomplete="off"></div>
-        <div class="field"><label for="s-dep">Dependientes que da derecho a deducir</label>
+        <div class="field"><label for="s-dep">Dependientes que puede demostrar</label>
           <select id="s-dep"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         <div class="field"><label for="s-com">Compras con factura electrónica</label><input type="text" inputmode="numeric" class="money" id="s-com" autocomplete="off"></div>
-        <div class="field"><label for="s-ret">Retenciones practicadas</label><input type="text" inputmode="numeric" class="money" id="s-ret" autocomplete="off"></div>
+        <div class="field"><label for="s-ret">Retenciones que le descontaron</label><input type="text" inputmode="numeric" class="money" id="s-ret" autocomplete="off"></div>
       </div>
       <div class="btns">
         <button type="button" class="btn" id="s-clear">Limpiar todo</button>
@@ -201,6 +235,29 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     <div class="card">
       <h2>Topes que conviene tener a mano</h2>
       <div class="tw"><table><thead><tr><th>Concepto</th><th class="r">UVT</th><th class="r">En pesos</th></tr></thead><tbody id="tb-topes"></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="panel single" id="p-conceptos" role="tabpanel" aria-labelledby="t-conceptos" hidden>
+    <div class="card gloss">
+      <h2>Conceptos en palabras simples</h2>
+      <details><summary>UVT</summary><p>Es una medida de valor que la DIAN actualiza cada año con la inflación. Los topes y las tarifas se dan en UVT para que no pierdan valor con el tiempo.</p><p class="ex">Ejemplo: en 2026 la UVT vale $52.374, así que 1.400 UVT son $73.323.600.</p></details>
+      <details><summary>Año gravable</summary><p>Es el año en que usted recibió el dinero. La declaración del año gravable 2025 se presentó entre agosto y octubre de 2026.</p></details>
+      <details><summary>Ingreso bruto e ingreso neto</summary><p>El ingreso bruto es todo lo que recibió. El ingreso neto es lo que queda después de restar los aportes obligatorios a salud y pensión, que la ley no cuenta como ingreso gravado.</p></details>
+      <details><summary>Renta exenta</summary><p>Es dinero que sí es ingreso, pero la ley no lo grava. Es como un descuento autorizado.</p><p class="ex">Ejemplo: el 25% de lo que gana un empleado queda libre de impuesto, con un tope anual.</p></details>
+      <details><summary>Deducción</summary><p>Es un gasto que la ley deja restar de sus ingresos antes de calcular el impuesto.</p><p class="ex">Ejemplos: intereses del crédito de vivienda y medicina prepagada.</p></details>
+      <details><summary>El límite del 40% y las 1.340 UVT</summary><p>Las rentas exentas y deducciones comparten un cupo: no pueden pasar del 40% del ingreso neto ni de 1.340 UVT al año. Se toma el menor. Algunas cosas no gastan ese cupo, como los dependientes adicionales y el 1% de las compras con factura electrónica.</p></details>
+      <details><summary>Renta líquida gravable</summary><p>Es el valor final, después de restar todo lo que la ley permite. Sobre ese valor se aplica la tabla del impuesto.</p></details>
+      <details><summary>Tarifa progresiva</summary><p>Entre más alta es la base, mayor es el porcentaje, pero cada porcentaje se aplica solo a su tramo, no a todo el valor. Por eso pasar al siguiente escalón no hace que pague más sobre lo anterior.</p></details>
+      <details><summary>Retención en la fuente</summary><p>Es un adelanto del impuesto que le descuentan cuando le pagan. Al declarar se resta del impuesto. Si le descontaron de más, queda un saldo a favor que puede pedir en devolución.</p></details>
+      <details><summary>Dependiente económico</summary><p>Es una persona que depende de usted, como hijos menores o estudiantes, un cónyuge sin ingresos o padres que mantenga. Debe poder demostrarlo con documentos.</p></details>
+      <details><summary>AFC</summary><p>Es la Cuenta de Ahorro para el Fomento de la Construcción. Lo que aporta se puede restar, siempre que respete el tiempo mínimo de permanencia.</p></details>
+      <h3>Preguntas frecuentes</h3>
+      <details><summary>Si ya me hicieron retención, ¿igual debo declarar?</summary><p>La retención no reemplaza la declaración. Debe declarar si supera alguno de los topes del año, aunque ya le hayan descontado.</p></details>
+      <details><summary>¿Declarar es lo mismo que pagar?</summary><p>No. Solo hay impuesto si la renta líquida gravable supera 1.090 UVT. Muchas personas declaran y no pagan nada, o tienen saldo a favor.</p></details>
+      <details><summary>¿Dónde encuentro mis datos?</summary><p>Su empleador entrega el certificado de ingresos y retenciones (formulario 220). Los intereses y la medicina prepagada se piden al banco y a la aseguradora. En el portal de la DIAN puede ver lo que terceros le reportaron como información exógena.</p></details>
+      <details><summary>¿Qué pasa si no declaro estando obligado?</summary><p>Puede haber sanciones e intereses, y la DIAN puede cuestionar la omisión. Consulte con un contador los plazos y las consecuencias de su caso.</p></details>
+      <details><summary>¿Puedo confiar en el resultado del simulador?</summary><p>Es una estimación con la norma vigente a noviembre de 2026. No cubre honorarios, rentas de capital, dividendos ni ganancias ocasionales. Confírmelo con un contador antes de presentar.</p></details>
     </div>
   </section>
 
@@ -257,11 +314,12 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     var tail=must
       ? '<p class="note">Declarar no significa pagar: solo hay impuesto si la renta líquida gravable supera 1.090 UVT ('+cop(1090*u)+'). Use la pestaña Simulador para calcularlo.</p>'
       : '<p class="note">Puede declarar de forma voluntaria solo si le practicaron retenciones en la fuente a título de renta. Sin retenciones, la declaración no produce efectos.</p>';
+    var next='<div class="btns">'+(must?'<button type="button" class="btn primary" data-goto="simulador">Calcular mi impuesto</button><button type="button" class="btn" data-goto="checklist">Ver qué debo revisar</button>':'<button type="button" class="btn" data-goto="conceptos">Entender los topes</button>')+'</div>';
     var extra='<details><summary>Otras obligaciones que no se suplen con la renta</summary><div class="note" style="margin-top:8px;display:flex;flex-direction:column;gap:4px">'+
       '<span>Activos en el exterior: declaración si superan 2.000 UVT ('+cop(2000*u)+') al 1 de enero.</span>'+
       '<span>Impuesto al patrimonio: patrimonio líquido de 72.000 UVT ('+cop(72000*u)+') o más al 1 de enero.</span>'+
       '<span>Los topes se miden con la UVT del año gravable, no la del año en que se presenta.</span></div></details>';
-    $('d-out').innerHTML=head+'<div class="tw"><table><thead><tr><th>Tope</th><th class="r">Su cifra</th><th class="r">Límite</th><th>Resultado</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+tail+extra;
+    $('d-out').innerHTML=head+'<div class="tw"><table><thead><tr><th>Tope</th><th class="r">Su cifra</th><th class="r">Límite</th><th>Resultado</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+tail+next+extra;
   }
 
   /* ---------- 2. Simulador ---------- */
@@ -309,30 +367,40 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       '<div class="kpi"><span>Renta líquida gravable</span><b>'+cop(r.rlg)+'</b><span>'+nf1.format(r.rlg/u)+' UVT</span></div>'+
       '<div class="kpi"><span>'+(p.ret?(saldo>=0?'Saldo a pagar':'Saldo a favor'):'Retenciones')+'</span><b>'+(p.ret?cop(Math.abs(saldo)):'Sin datos')+'</b></div></div>';
     if(r.imp===0&&p.ing>0)kp+='<p class="note">La renta líquida gravable no supera 1.090 UVT ('+cop(1090*u)+'), por eso no hay impuesto.</p>';
+    if(p.ing>0){
+      var tasa=r.imp/p.ing*100;
+      kp+='<p class="plain">'+(r.imp>0?'De cada $100 que usted ganó, aproximadamente <b>$'+nf1.format(tasa)+'</b> se van en impuesto de renta.':'Con estos datos <b>no pagaría impuesto de renta</b>.')+'</p>';
+      var benef=r.ex7+r.usado+r.dep+r.fe,wA=p.incr/p.ing*100,wB=benef/p.ing*100,wC=Math.max(0,100-wA-wB);
+      kp+='<div><b>¿Cómo se reparte su ingreso?</b><div class="stack" role="img" aria-label="Reparto del ingreso: aportes '+nf1.format(wA)+'%, beneficios '+nf1.format(wB)+'%, base gravable '+nf1.format(wC)+'%">'+
+        '<i class="s1" style="width:'+wA+'%"></i><i class="s2" style="width:'+wB+'%"></i><i class="s3" style="width:'+wC+'%"></i></div>'+
+        '<div class="legend"><span class="l1"><em>Aportes a salud y pensión</em><b class="num">'+cop(p.incr)+'</b></span>'+
+        '<span class="l2"><em>Exentos y deducciones (no pagan impuesto)</em><b class="num">'+cop(benef)+'</b></span>'+
+        '<span class="l3"><em>Base sobre la que se calcula el impuesto</em><b class="num">'+cop(r.rlg)+'</b></span></div></div>';
+    }
     $('s-sum').innerHTML=kp;
 
     var capNote=function(applied,entered,txt){return entered>applied+0.5?' <span class="note">(tope '+txt+' aplicado)</span>':'';};
-    var row=function(label,v,cls){return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+label+'</td><td class="r num">'+(v===null?'':cop(v))+'</td></tr>';};
-    var t='<tr><td>Ingresos laborales</td><td class="r num">'+cop(p.ing)+'</td></tr>'+
-      row('(−) Aportes obligatorios',p.incr)+
-      row('= Ingreso neto',r.neto,'total');
-    if(r.ex7>0)t+=row('(−) Gastos de representación exentos (fuera del límite)',r.ex7);
-    t+=row('(−) Intereses de vivienda'+capNote(r.viv,p.viv,'1.200 UVT'),r.viv)+
-      row('(−) Medicina prepagada'+capNote(r.prep,p.prep,'16 UVT al mes'),r.prep)+
-      row('(−) Aportes voluntarios AFC o pensión'+capNote(r.afc,p.afc,'30% o 3.800 UVT'),r.afc)+
-      row('(−) Renta exenta del 25%',r.ex25)+
-      row('Suma dentro del límite',r.dentro,'sub')+
-      row('Se resta solo hasta el límite',r.usado,'sub');
-    if(r.dep>0)t+=row('(−) Dependientes, 72 UVT cada uno (fuera del límite)',r.dep);
-    if(r.fe>0)t+=row('(−) 1% de compras con factura electrónica (fuera del límite)',r.fe);
-    t+=row('= Renta líquida gravable',r.rlg,'total');
+    var row=function(label,v,cls,note){return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+label+(note?'<div class="note">'+note+'</div>':'')+'</td><td class="r num">'+(v===null?'':cop(v))+'</td></tr>';};
+    var t=row('Ingresos laborales',p.ing,'','Todo lo que le pagaron por trabajar en el año.')+
+      row('(−) Aportes obligatorios',p.incr,'','Lo descontado para salud y pensión. La ley no lo cuenta como ingreso gravado.')+
+      row('= Ingreso neto',r.neto,'total','Con esto empieza el cálculo.');
+    if(r.ex7>0)t+=row('(−) Gastos de representación exentos (fuera del límite)',r.ex7,'','Parte del salario que la ley deja libre de impuesto para ciertos cargos.');
+    t+=row('(−) Intereses de vivienda'+capNote(r.viv,p.viv,'1.200 UVT'),r.viv,'','Intereses del crédito de vivienda, con certificado del banco.')+
+      row('(−) Medicina prepagada'+capNote(r.prep,p.prep,'16 UVT al mes'),r.prep,'','Lo pagado en medicina prepagada o pólizas de salud privadas.')+
+      row('(−) Aportes voluntarios AFC o pensión'+capNote(r.afc,p.afc,'30% o 3.800 UVT'),r.afc,'','Ahorro voluntario que se resta, con permanencia mínima.')+
+      row('(−) Renta exenta del 25%',r.ex25,'','La ley deja libre de impuesto el 25% de lo que queda, hasta un tope.')+
+      row('Suma dentro del límite',r.dentro,'sub','Todo lo anterior compite por un mismo cupo.')+
+      row('Se resta solo hasta el límite',r.usado,'sub','Si la suma pasa del cupo, solo se resta el cupo.');
+    if(r.dep>0)t+=row('(−) Dependientes, 72 UVT cada uno (fuera del límite)',r.dep,'','Por cada dependiente que pueda demostrar, se resta un valor fijo.');
+    if(r.fe>0)t+=row('(−) 1% de compras con factura electrónica (fuera del límite)',r.fe,'','Se resta el 1% de lo comprado con factura a su nombre y pago electrónico.');
+    t+=row('= Renta líquida gravable',r.rlg,'total','Sobre este valor se aplica la tabla del impuesto.');
     var pct=r.cupo?Math.min(100,r.usado/r.cupo*100):0;
     var over=r.dentro>r.cupo+0.5;
     var bar='<div><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>Cupo de rentas exentas y deducciones</b><span class="num">'+cop(r.usado)+' de '+cop(r.cupo)+'</span></div>'+
       '<div class="meter'+(over?' over':'')+'"><i style="width:'+pct+'%"></i></div>'+
       '<p class="note" style="margin-top:6px">El cupo es el menor entre 40% del ingreso neto y 1.340 UVT ('+cop(1340*u)+'). '+
       (over?'Se excede por '+cop(r.dentro-r.cupo)+': esa parte no da beneficio.':'Cupo libre: '+cop(Math.max(0,r.cupo-r.dentro))+'.')+'</p></div>';
-    $('s-dep-card').innerHTML='<h2>Cómo se depura</h2>'+bar+'<div class="tw"><table><tbody>'+t+'</tbody></table></div>';
+    $('s-dep-card').innerHTML='<h2>Cómo se llega al impuesto</h2><p class="note">Cada fila explica qué se resta y por qué. ¿Un término nuevo? <button type="button" class="linkbtn" data-goto="conceptos">Ver conceptos</button></p>'+bar+'<div class="tw"><table><tbody>'+t+'</tbody></table></div>';
 
     /* Planeación */
     var tips='';
@@ -442,7 +510,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   }
 
   /* ---------- Navegación, año y eventos ---------- */
-  var TABS=['declarar','simulador','checklist','tablas'];
+  var TABS=['declarar','simulador','checklist','tablas','conceptos'];
   function showTab(name){
     if(TABS.indexOf(name)<0)name='declarar';
     TABS.forEach(function(t){
@@ -495,6 +563,13 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   $('s-clear').addEventListener('click',function(){
     ['s-ing','s-incr','s-viv','s-prep','s-afc','s-com','s-ret','s-sal'].forEach(function(id){$(id).value='';});
     $('s-dep').value='0';$('s-cargo').value='0';incrAuto=true;renderSim();
+  });
+
+  document.addEventListener('click',function(e){
+    var g=e.target.closest&&e.target.closest('[data-goto]');
+    if(!g)return;
+    var n=g.getAttribute('data-goto');location.hash=n;showTab(n);
+    var el=$('p-'+n);if(el&&el.scrollIntoView)el.scrollIntoView({block:'start'});
   });
 
   /* Estado inicial con ejemplos marcados */
