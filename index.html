@@ -168,6 +168,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       <a href="#datos" data-sec="datos">Mis datos</a>
       <a href="#plan" data-sec="plan">Plan de acción</a>
       <a href="#calculo" data-sec="calculo">Cómo se calcula</a>
+      <a href="#anticipo" data-sec="anticipo">Anticipo</a>
       <a href="#revision" data-sec="revision">Revisión final</a>
       <a href="#consulta" data-sec="consulta">Tablas y conceptos</a>
     </nav>
@@ -245,6 +246,25 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       <div class="grid2">
         <div class="card" id="calc-main"></div>
         <div class="card" id="calc-side"></div>
+      </div>
+    </section>
+
+    <!-- Anticipo -->
+    <section class="sec" id="anticipo">
+      <div class="sec-head"><span class="eyebrow">Art. 807 ET</span><h2>Anticipo del impuesto de renta</h2>
+        <p>Es un pago adelantado del impuesto del año siguiente. Se paga con la declaración y se descuenta en la del año siguiente. Aplica si su impuesto neto es mayor que cero.</p></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="field"><label for="a-n">¿Cuántas veces ha declarado, contando esta?</label>
+            <select id="a-n"><option value="1">Primera vez (25%)</option><option value="2">Segunda vez (50%)</option><option value="3" selected>Tercera vez o más (75%)</option></select></div>
+          <div class="field"><label for="a-prev">Impuesto neto de renta del año anterior</label><input type="text" inputmode="numeric" class="money" id="a-prev" autocomplete="off"><span class="hint">Está en la declaración del año anterior. Se usa en el procedimiento 2 (promedio de dos años).</span></div>
+          <p class="note">El impuesto del año y las retenciones salen de la sección Mis datos. Si se da en cero, el anticipo es cero.</p>
+        </div>
+        <div class="card" id="a-out"></div>
+      </div>
+      <div class="card"><h3>Qué debe saber</h3>
+        <p class="note">Procedimiento 1: impuesto del año × porcentaje − retenciones. Procedimiento 2: promedio del impuesto de los dos últimos años × porcentaje − retenciones. Puede escoger el menor cada año; quien declara por primera vez solo usa el 1.</p>
+        <p class="note">Puede pedir a la DIAN que lo reduzca si sus ingresos cayeron (arts. 808 a 810). La solicitud no suspende el pago.</p>
       </div>
     </section>
 
@@ -374,7 +394,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   }
 
   /* ----- Render ----- */
-  var lastSummary='';
+  var lastSummary='',anticipoTxt='';
   function renderAll(){
     var u=U(),p=readS(),r=compute(p,u),dc=declInfo(),pl=buildPlan(p,u,r),closed=(year===2025);
     renderDecl(dc);
@@ -443,9 +463,23 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       '<span class="l2"><em>Exentos y deducciones (no pagan impuesto)</em><b class="num">'+cop(benef)+'</b></span>'+
       '<span class="l3"><em>Base sobre la que se calcula el impuesto</em><b class="num">'+cop(r.rlg)+'</b></span></div></div>';
 
+    (function(){
+      var n=parseInt($('a-n').value,10)||3,pc=n===1?0.25:(n===2?0.5:0.75),prev=val('a-prev');
+      var a1=Math.max(0,r.imp*pc-p.ret),h2=null,a2=null;
+      if(n>1&&prev>0){h2=((r.imp+prev)/2)*pc;a2=Math.max(0,h2-p.ret);}
+      var best=a2===null?a1:Math.min(a1,a2),which=(a2!==null&&a2<a1)?2:1;
+      var rows='<tr><td>Base</td><td class="r num">'+cop(r.imp)+'</td><td class="r num">'+(a2===null?'—':cop((r.imp+prev)/2))+'</td></tr>'+
+        '<tr><td>× '+Math.round(pc*100)+'%</td><td class="r num">'+cop(r.imp*pc)+'</td><td class="r num">'+(a2===null?'—':cop(h2))+'</td></tr>'+
+        '<tr><td>− Retenciones</td><td class="r num">'+cop(p.ret)+'</td><td class="r num">'+(a2===null?'—':cop(p.ret))+'</td></tr>'+
+        '<tr class="total"><td>Anticipo</td><td class="r num">'+cop(a1)+'</td><td class="r num">'+(a2===null?'—':cop(a2))+'</td></tr>';
+      $('a-out').innerHTML='<div class="stat key"><span class="lbl">Anticipo estimado'+(closed?' para 2026':' para '+(year+1))+'</span><span class="val">'+cop(best)+'</span><span class="sub">'+(a2===null?(n>1?'Escriba el impuesto del año anterior para comparar con el promedio.':'Primera vez: solo aplica el procedimiento 1.'):'Conviene el procedimiento '+which+'.')+'</span></div>'+
+        '<div class="tw"><table><thead><tr><th></th><th class="r">Procedimiento 1</th><th class="r">Procedimiento 2</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        '<p class="note">Saldo a pagar = impuesto + anticipo del año siguiente − anticipo del año anterior − retenciones − saldo a favor anterior. Aquí no se resta el anticipo del año anterior.</p>';
+      anticipoTxt='Anticipo estimado: '+cop(best)+' (procedimiento '+which+', '+Math.round(pc*100)+'%)';
+    })();
     lastSummary='Resumen de renta, año gravable '+year+' (UVT '+cop(u)+')\n¿Debe declarar? '+(dc.must?'Sí ('+dc.reasons.join(', ')+')':'No')+
       '\nIngresos laborales: '+cop(p.ing)+'\nIngreso neto: '+cop(r.neto)+'\nRenta líquida gravable: '+cop(r.rlg)+' ('+nf1.format(r.rlg/u)+' UVT)\nImpuesto de renta: '+cop(r.imp)+
-      '\nCon plan (AFC y facturación): '+cop(pl.combined.imp)+' (ahorro '+cop(pl.saveAll)+')'+
+      '\nCon plan (AFC y facturación): '+cop(pl.combined.imp)+' (ahorro '+cop(pl.saveAll)+')\n'+anticipoTxt+
       (p.ret?'\n'+(saldo>=0?'Saldo a pagar: ':'Saldo a favor: ')+cop(Math.abs(saldo)):'')+'\nCálculo orientativo; confirme con un contador.';
     document.querySelectorAll('.extag').forEach(function(e){e.hidden=!exampleMode;});
   }
@@ -488,6 +522,10 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     d('¿Declarar es lo mismo que pagar?','No. Solo hay impuesto si la renta líquida gravable supera 1.090 UVT. Muchas personas declaran y no pagan, o tienen saldo a favor.'),
     d('¿Dónde encuentro mis datos?','Su empleador entrega el certificado de ingresos y retenciones (formulario 220). Intereses y medicina prepagada se piden al banco y a la aseguradora. En el portal de la DIAN puede ver lo que terceros le reportaron como información exógena.'),
     d('¿Qué pasa si no declaro estando obligado?','Puede haber sanciones e intereses, y la DIAN puede cuestionar la omisión. Consulte con un contador los plazos y consecuencias de su caso.'),
+    d('¿Qué es el anticipo de renta?','Es el pago adelantado de una parte del impuesto del año siguiente: 25% la primera vez que declara, 50% la segunda y 75% de la tercera en adelante. Se paga junto con la declaración y se descuenta al año siguiente. Se resta lo que le retuvieron en el año.'),
+    d('¿Qué pasa si presento tarde?','La sanción por extemporaneidad es del 5% del impuesto a cargo por cada mes o fracción de retraso (art. 641), con un mínimo de 10 UVT (art. 639), más intereses moratorios. Confirme los valores y topes con un contador.'),
+    d('¿Cuánto tiempo guardo los soportes?','Por regla general la declaración queda en firme tres años después de presentarse. Guarde los documentos al menos ese tiempo.'),
+    d('¿Puedo corregir una declaración?','Sí, mientras no esté en firme. Si la corrección aumenta el impuesto, hay sanción sobre el mayor valor (art. 644).'),
     d('¿Puedo confiar en el resultado?','Es una estimación con la norma vigente a noviembre de 2026. No cubre honorarios, rentas de capital, dividendos ni ganancias ocasionales. Confírmelo con un contador antes de presentar.')].join('');
 
   /* ----- Lista de chequeo ----- */
@@ -496,7 +534,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     {t:'Ingresos y patrimonio',i:[['c4','¿Cada ingreso está en su cédula (trabajo, capital, no laborales, pensiones, dividendos, ganancias ocasionales)?'],['c5','¿Las consignaciones y consumos altos tienen explicación soportada?'],['c6','¿El patrimonio incluye cuentas, inversiones, vehículos, inmuebles y activos en el exterior al 31 de diciembre?']]},
     {t:'Depuración',i:[['c7','¿El límite se calculó sobre el ingreso neto, como el menor entre 40% y 1.340 UVT?'],['c8','¿La renta exenta del 25% se calculó después de las demás deducciones y no pasó de 790 UVT?'],['c9','¿Cada deducción respeta su tope (vivienda 1.200 UVT, prepagada 16 UVT al mes, Icetex 100 UVT)?'],['c10','¿Los dependientes adicionales, el 1% de facturación y los numerales 6 a 9 del art. 206 se tomaron por fuera del límite, cuando aplican?'],['c11','Si recibió honorarios: ¿eligió entre costos y gastos o renta exenta del 25%, sin mezclar ambos?']]},
     {t:'Soportes',i:[['c12','Certificados de intereses, medicina prepagada, AFC y pensión voluntaria.'],['c13','Certificado de ingresos y retenciones del empleador o de los pagadores.'],['c14','Facturas electrónicas a su nombre para el 1% de compras, pagadas por medios electrónicos.'],['c15','Prueba de la dependencia económica de cada dependiente.']]},
-    {t:'Cierre',i:[['c16','¿Revisó si debe presentar activos en el exterior o impuesto al patrimonio?'],['c17','¿Verificó el plazo según los dos últimos dígitos del NIT?'],['c18','¿Guardó los soportes al menos tres años? Por regla general la declaración queda en firme en ese plazo.']]}];
+    {t:'Cierre',i:[['c16','¿Revisó si debe presentar activos en el exterior o impuesto al patrimonio?'],['c17','¿Verificó el plazo según los dos últimos dígitos del NIT?'],['c19','¿Calculó el anticipo con el procedimiento más favorable y lo incluyó en el saldo a pagar?'],['c18','¿Guardó los soportes al menos tres años? Por regla general la declaración queda en firme en ese plazo.']]}];
   var CK='asesor-renta-chk',mem={},TOTAL=GROUPS.reduce(function(a,g){return a+g.i.length;},0);
   function loadChk(){try{var s=localStorage.getItem(CK);if(s)mem=JSON.parse(s)||{};}catch(e){}}
   function saveChk(){try{localStorage.setItem(CK,JSON.stringify(mem));}catch(e){}}
@@ -508,15 +546,15 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   }
 
   /* ----- Guardar y restaurar datos ----- */
-  var FIELDS=['d-pat','d-ing','d-tar','d-com','d-con','s-ing','s-incr','s-sal','s-viv','s-prep','s-afc','s-com','s-ret'],FK='asesor-renta-form';
-  function saveForm(){try{var o={year:year,iva:$('d-iva').checked,cargo:$('s-cargo').value,dep:$('s-dep').value,incrAuto:incrAuto};FIELDS.forEach(function(f){o[f]=$(f).value;});localStorage.setItem(FK,JSON.stringify(o));}catch(e){}}
+  var FIELDS=['d-pat','d-ing','d-tar','d-com','d-con','s-ing','s-incr','s-sal','s-viv','s-prep','s-afc','s-com','s-ret','a-prev'],FK='asesor-renta-form';
+  function saveForm(){try{var o={year:year,iva:$('d-iva').checked,cargo:$('s-cargo').value,dep:$('s-dep').value,an:$('a-n').value,incrAuto:incrAuto};FIELDS.forEach(function(f){o[f]=$(f).value;});localStorage.setItem(FK,JSON.stringify(o));}catch(e){}}
   function loadForm(){try{var s=localStorage.getItem(FK);if(!s)return false;var o=JSON.parse(s);FIELDS.forEach(function(f){if(typeof o[f]==='string')$(f).value=o[f];});
-    $('d-iva').checked=!!o.iva;if(o.cargo)$('s-cargo').value=o.cargo;if(o.dep)$('s-dep').value=o.dep;incrAuto=o.incrAuto!==false;if(o.year===2025||o.year===2026)year=o.year;return true;}catch(e){return false;}}
+    $('d-iva').checked=!!o.iva;if(o.cargo)$('s-cargo').value=o.cargo;if(o.dep)$('s-dep').value=o.dep;if(o.an)$('a-n').value=o.an;incrAuto=o.incrAuto!==false;if(o.year===2025||o.year===2026)year=o.year;return true;}catch(e){return false;}}
   function fillSample(){
     incrAuto=true;
     setMoney('s-ing',sample.ing);setMoney('s-incr',sample.incr);setMoney('s-viv',sample.viv);setMoney('s-prep',sample.prep);setMoney('s-afc',sample.afc);setMoney('s-com',sample.com);setMoney('s-ret',sample.ret);setMoney('s-sal',0);
     setMoney('d-pat',sample.pat);setMoney('d-ing',sample.ding);setMoney('d-tar',sample.tar);setMoney('d-com',sample.dcom);setMoney('d-con',sample.con);
-    $('s-dep').value=String(sample.dep);$('s-cargo').value='0';$('d-iva').checked=false;
+    $('s-dep').value=String(sample.dep);setMoney('a-prev',2000000);$('a-n').value='3';$('s-cargo').value='0';$('d-iva').checked=false;
   }
   function changed(){exampleMode=false;saveForm();renderAll();}
   function setYear(y){year=y;$('y2025').setAttribute('aria-pressed',y===2025?'true':'false');$('y2026').setAttribute('aria-pressed',y===2026?'true':'false');renderTablas();saveForm();renderAll();}
@@ -529,7 +567,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     var cur=document.querySelector('#nav a[aria-current="true"]');if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}}
   document.querySelectorAll('#nav a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();go(a.getAttribute('data-sec'));});});
   document.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(g){e.preventDefault();go(g.getAttribute('data-go'));}});
-  var SECS=['resumen','datos','plan','calculo','revision','consulta'];
+  var SECS=['resumen','datos','plan','calculo','anticipo','revision','consulta'];
   function spy(){
     setHdr();var y=($('hdr').offsetHeight||100)+30,cur=SECS[0];
     SECS.forEach(function(id){var el=$(id);if(el&&el.getBoundingClientRect().top<=y)cur=id;});
@@ -551,11 +589,11 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       changed();
     });
   });
-  ['s-cargo','s-dep','d-iva'].forEach(function(id){$(id).addEventListener('change',changed);});
+  ['s-cargo','s-dep','d-iva','a-n'].forEach(function(id){$(id).addEventListener('change',changed);});
   $('y2025').addEventListener('click',function(){setYear(2025);});
   $('y2026').addEventListener('click',function(){setYear(2026);});
   $('s-sample').addEventListener('click',function(){fillSample();exampleMode=true;saveForm();renderAll();});
-  $('s-clear').addEventListener('click',function(){FIELDS.forEach(function(f){$(f).value='';});$('s-dep').value='0';$('s-cargo').value='0';$('d-iva').checked=false;incrAuto=true;changed();});
+  $('s-clear').addEventListener('click',function(){FIELDS.forEach(function(f){$(f).value='';});$('s-dep').value='0';$('s-cargo').value='0';$('a-n').value='3';$('d-iva').checked=false;incrAuto=true;changed();});
   $('s-copy').addEventListener('click',copySummary);
   $('c-list').addEventListener('change',function(e){var c=e.target.getAttribute&&e.target.getAttribute('data-c');if(!c)return;mem[c]=e.target.checked;saveChk();updChk();});
   $('c-reset').addEventListener('click',function(){mem={};saveChk();renderChk();});
