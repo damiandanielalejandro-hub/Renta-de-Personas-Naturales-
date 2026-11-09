@@ -152,6 +152,38 @@ textarea.copybox{width:100%;min-height:150px;font-family:var(--font-mono);font-s
 footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;margin-top:40px;padding-top:16px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:no-preference){.meter i{transition:width .25s ease}}
 @media (max-width:520px){.strip{display:none}}
+
+/* Asistente guiado */
+.wiz{gap:16px}
+.wstep[hidden]{display:none}
+.wstep{display:flex;flex-direction:column;gap:14px}
+.wstep h3{font-size:20px}
+.why{font-size:13px;color:var(--muted)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.choice{text-align:left;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.choice b{font-family:var(--font-display);font-size:16px}
+.choice span{font-size:13px;color:var(--muted)}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+#w-result{display:flex;flex-direction:column;gap:14px}
+.bignum{font-family:var(--font-mono);font-size:24px}
+.say{background:var(--accent-soft);border-radius:10px;padding:16px 18px;font-size:17px;line-height:1.45;font-family:var(--font-display);font-weight:600}
+.say b{color:var(--accent)}
+.bullets{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.bullets div{display:flex;gap:8px;align-items:flex-start}
+.bullets div::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:7px}
+/* Flujo ingreso a impuesto */
+.frow{display:grid;grid-template-columns:minmax(130px,230px) minmax(0,1fr) auto;gap:6px 12px;align-items:center;font-size:14px;padding:4px 0}
+.ftrack{position:relative;height:24px;background:var(--surface2);border-radius:6px;overflow:hidden}
+.fbar{position:absolute;top:0;bottom:0;min-width:3px;border-radius:5px}
+.fb-in{background:var(--muted)}.fb-out{background:var(--accent)}.fb-base{background:var(--warn)}.fb-tax{background:var(--bad)}
+.frow .v{font-family:var(--font-mono);font-size:13px;text-align:right}
+@media (max-width:620px){.frow{grid-template-columns:minmax(0,1fr) auto}.frow .ftrack{grid-column:1 / -1}}
+/* Deslizador */
+input[type=range]{width:100%;accent-color:var(--accent);height:34px}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mini div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.mini span{font-size:12px;color:var(--muted)}
+.mini b{font-family:var(--font-mono);font-weight:500;font-size:18px}
 </style></head><body>
 
 <div class="wrap">
@@ -164,7 +196,8 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       </div>
     </div>
     <nav class="nav" id="nav" aria-label="Secciones">
-      <a href="#resumen" data-sec="resumen" aria-current="true">Panorama</a>
+      <a href="#guia" data-sec="guia" aria-current="true">Empezar</a>
+      <a href="#resumen" data-sec="resumen">Panorama</a>
       <a href="#datos" data-sec="datos">Mis datos</a>
       <a href="#plan" data-sec="plan">Plan de acción</a>
       <a href="#calculo" data-sec="calculo">Cómo se calcula</a>
@@ -176,11 +209,89 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   </header>
 
   <main>
+    <!-- Asistente -->
+    <section class="sec" id="guia">
+      <div class="sec-head"><span class="eyebrow">Empiece aquí</span><h2>Cuéntenos su caso en 5 pasos</h2>
+        <p>Una pregunta a la vez, con una explicación de para qué sirve cada dato. Al final verá su resultado en palabras simples. Si no sabe un dato, déjelo en blanco.</p></div>
+      <div class="card wiz" id="wiz">
+        <div class="progress"><p class="note" id="w-lbl"></p><div class="meter"><i id="w-bar" style="width:0"></i></div></div>
+
+        <div class="wstep" data-s="0">
+          <h3>¿Cuál describe mejor su situación?</h3>
+          <div class="choices" role="group" aria-label="Situación">
+            <button type="button" class="choice" data-profile="emp" aria-pressed="true"><b>Empleado</b><span>Recibo salario de un empleador.</span></button>
+            <button type="button" class="choice" data-profile="srv" aria-pressed="false"><b>Cargo con gastos de representación</b><span>Magistrado, juez, fiscal delegado ante la Corte o rector.</span></button>
+            <button type="button" class="choice" data-profile="ind" aria-pressed="false"><b>Independiente u otro</b><span>Honorarios o varias fuentes. El resultado será solo una guía.</span></button>
+          </div>
+          <div class="field" id="w-cargowrap" hidden><label for="w-cargo">¿Cuál es su cargo?</label>
+            <select id="w-cargo">
+              <option value="0.5">Magistrado, fiscal delegado ante la Corte Suprema o procurador judicial (50%)</option>
+              <option value="0.25">Juez de la República (25%)</option>
+              <option value="0.5r">Rector o profesor de universidad pública (hasta 50%)</option>
+            </select></div>
+          <p class="why" id="w-indnote" hidden>Con honorarios hay que elegir entre restar costos y gastos o tomar la renta exenta del 25%. Esta página calcula como si fueran ingresos laborales, así que tome el resultado como una referencia.</p>
+          <details><summary>¿Por qué lo preguntamos?</summary><p>Las reglas cambian según el tipo de ingreso. Algunos cargos tienen una parte del salario libre de impuesto como gasto de representación.</p></details>
+        </div>
+
+        <div class="wstep" data-s="1" hidden>
+          <h3>¿Cuánto gana?</h3>
+          <div class="fgrid">
+            <div class="field"><label for="w-mes">Ingreso mensual</label><input type="text" inputmode="numeric" class="money" id="w-mes" autocomplete="off"><span class="hint">Lo que le consignan antes de descuentos de ley.</span></div>
+            <div class="field"><label for="w-pagos">¿Cuántos pagos recibe al año?</label>
+              <select id="w-pagos"><option value="12">12 (solo el salario mensual)</option><option value="13" selected>13 (con una prima)</option><option value="14">14 (con dos pagos extra)</option></select>
+              <span class="hint">Una prima de servicios equivale a un mes por año.</span></div>
+          </div>
+          <p>Ingreso del año: <span class="bignum" id="w-anual">$0</span></p>
+          <details><summary>¿Por qué lo preguntamos?</summary><p>El impuesto se calcula sobre lo que recibió en el año completo. Los aportes a salud y pensión se estiman en 8% si no los conoce, y puede ajustarlos más adelante.</p></details>
+        </div>
+
+        <div class="wstep" data-s="2" hidden>
+          <h3>¿Qué gastos le ayudan a pagar menos?</h3>
+          <div class="fgrid">
+            <div class="field"><label for="w-viv">Intereses de crédito de vivienda al año</label><input type="text" inputmode="numeric" class="money" id="w-viv" autocomplete="off"><span class="hint">Está en el certificado del banco.</span></div>
+            <div class="field"><label for="w-prep">Medicina prepagada al año</label><input type="text" inputmode="numeric" class="money" id="w-prep" autocomplete="off"><span class="hint">Pólizas de salud privadas.</span></div>
+            <div class="field"><label for="w-afc">Aportes voluntarios a AFC o pensión</label><input type="text" inputmode="numeric" class="money" id="w-afc" autocomplete="off"><span class="hint">Solo lo que usted aporta de forma voluntaria.</span></div>
+            <div class="field"><label for="w-dep">Dependientes que puede demostrar</label>
+              <select id="w-dep"><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+              <span class="hint">Hijos, cónyuge sin ingresos, padres o hermanos que dependan de usted.</span></div>
+            <div class="field"><label for="w-fact">Compras con factura electrónica a su nombre</label><input type="text" inputmode="numeric" class="money" id="w-fact" autocomplete="off"><span class="hint">Pagadas por medio electrónico.</span></div>
+          </div>
+          <details><summary>¿Por qué lo preguntamos?</summary><p>Estos gastos se restan antes de calcular el impuesto. Unos comparten un tope común (el cupo) y otros, como los dependientes y la facturación, no lo gastan.</p></details>
+        </div>
+
+        <div class="wstep" data-s="3" hidden>
+          <h3>¿Está obligado a declarar?</h3>
+          <div class="fgrid">
+            <div class="field"><label for="w-pat">Patrimonio bruto al 31 de diciembre</label><input type="text" inputmode="numeric" class="money" id="w-pat" autocomplete="off"><span class="hint">Todo lo que posee, sin restar deudas.</span></div>
+            <div class="field"><label for="w-tar">Consumos con tarjeta de crédito</label><input type="text" inputmode="numeric" class="money" id="w-tar" autocomplete="off"></div>
+            <div class="field"><label for="w-comp">Compras y consumos totales</label><input type="text" inputmode="numeric" class="money" id="w-comp" autocomplete="off"></div>
+            <div class="field"><label for="w-con">Consignaciones, depósitos e inversiones</label><input type="text" inputmode="numeric" class="money" id="w-con" autocomplete="off"></div>
+          </div>
+          <label class="chk"><input type="checkbox" id="w-iva"><span>Fui responsable del IVA al 31 de diciembre</span></label>
+          <details><summary>¿Por qué lo preguntamos?</summary><p>Basta superar uno solo de los topes para tener que declarar. Los topes se miden en UVT del año gravable.</p></details>
+        </div>
+
+        <div class="wstep" data-s="4" hidden>
+          <h3>¿Cuánto le retuvieron en el año?</h3>
+          <div class="field"><label for="w-ret">Retenciones en la fuente</label><input type="text" inputmode="numeric" class="money" id="w-ret" autocomplete="off"><span class="hint">Está en el certificado de ingresos y retenciones. Si no lo tiene, déjelo en blanco.</span></div>
+          <details><summary>¿Por qué lo preguntamos?</summary><p>La retención es un adelanto del impuesto. Se resta del valor final, y también del anticipo del año siguiente.</p></details>
+        </div>
+
+        <div class="wstep" data-s="5" hidden>
+          <h3>Su resultado en palabras simples</h3>
+          <div id="w-result"></div>
+        </div>
+
+        <div class="btns"><button type="button" class="btn" id="w-back">Atrás</button><button type="button" class="btn primary" id="w-next">Siguiente</button></div>
+      </div>
+    </section>
+
     <!-- Panorama -->
     <section class="sec" id="resumen">
       <div class="sec-head"><span class="eyebrow">Resumen</span><h2>Su panorama</h2>
         <p>Lo que importa en un vistazo. Se actualiza solo cuando cambia sus datos más abajo. <span class="tag extag">Ejemplo precargado</span></p></div>
       <div class="ctx" id="ctx"></div>
+      <div class="say" id="sentence"></div>
       <div class="stats" id="stats" aria-live="polite"></div>
       <div id="best"></div>
       <div class="card" id="compare"></div>
@@ -235,6 +346,12 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     <section class="sec" id="plan">
       <div class="sec-head"><span class="eyebrow">Estrategia</span><h2 id="plan-h">Plan de acción</h2><p id="plan-p"></p></div>
       <div class="levers" id="levers" aria-live="polite"></div>
+      <div class="card" id="sl-card">
+        <h3>Pruébelo: ¿cuánto aportaría a AFC o pensión voluntaria?</h3>
+        <p class="note">Mueva el control y vea cómo cambia el impuesto. Pasar del máximo no da más ahorro, porque el cupo ya se llena.</p>
+        <input type="range" id="sl" min="0" max="0" step="100000" value="0" aria-label="Aporte voluntario adicional">
+        <div class="mini" id="sl-out"></div>
+      </div>
       <div class="btns"><button type="button" class="btn primary" id="s-copy">Copiar resumen</button></div>
       <div id="s-copymsg" class="note"></div>
     </section>
@@ -243,6 +360,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     <section class="sec" id="calculo">
       <div class="sec-head"><span class="eyebrow">Detalle</span><h2>Cómo se llega al impuesto</h2>
         <p>Cada fila explica qué se resta y por qué. ¿Un término nuevo? <button type="button" class="linkbtn" data-go="consulta">Vea los conceptos</button>.</p></div>
+      <div class="card" id="calc-flow"></div>
       <div class="grid2">
         <div class="card" id="calc-main"></div>
         <div class="card" id="calc-side"></div>
@@ -420,6 +538,10 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       '<p class="note">"Con plan" suma las acciones 1 y 2 de la sección Plan de acción: llenar el cupo con aportes voluntarios y facturar el resto de sus compras. No incluye dependientes.</p>';
     var strip='<span>Declara: <b>'+(dc.must?'Sí':'No')+'</b></span><span>Impuesto: <b>'+cop(r.imp)+'</b></span><span>Ahorro posible: <b>'+cop(pl.saveAll)+'</b></span>';
     $('strip').innerHTML=strip;
+    $('sentence').innerHTML=plain(p,u,r,dc,pl,closed);
+    renderFlow(p,u,r);
+    setupSl(p,u,r,closed);
+    wizResult(p,u,r,dc,pl,closed);
 
     $('plan-h').textContent=closed?'Beneficios que conviene revisar':'Plan de acción';
     $('plan-p').textContent=closed?'El año ya cerró. Estas son las palancas que existían y su efecto, para comprobar que tomó las que le correspondían.':
@@ -482,6 +604,72 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       '\nCon plan (AFC y facturación): '+cop(pl.combined.imp)+' (ahorro '+cop(pl.saveAll)+')\n'+anticipoTxt+
       (p.ret?'\n'+(saldo>=0?'Saldo a pagar: ':'Saldo a favor: ')+cop(Math.abs(saldo)):'')+'\nCálculo orientativo; confirme con un contador.';
     document.querySelectorAll('.extag').forEach(function(e){e.hidden=!exampleMode;});
+  }
+
+
+  /* ----- Frase, flujo, deslizador, resultado del asistente ----- */
+  function plain(p,u,r,dc,pl,closed){
+    if(!(p.ing>0))return 'Escriba sus ingresos en el asistente para ver aquí su resultado en una frase.';
+    var tasa=nf1.format(r.imp/p.ing*100);
+    var a=dc.must?'<b>Debe declarar renta</b>':'<b>No está obligado a declarar renta</b>';
+    var b=r.imp>0?' y pagaría cerca de <b>'+cop(r.imp)+'</b> de impuesto, el '+tasa+'% de lo que ganó':' y no pagaría impuesto, porque su renta no supera 1.090 UVT';
+    var c=pl.saveAll>0?(closed?'. Pudo ahorrar hasta <b>'+cop(pl.saveAll)+'</b> con los beneficios que la ley permite.':'. Con un plan antes del 31 de diciembre podría pagar cerca de <b>'+cop(pl.combined.imp)+'</b>, es decir, ahorrar <b>'+cop(pl.saveAll)+'</b>.'):'.';
+    return a+b+c;
+  }
+  function renderFlow(p,u,r){
+    var ing=p.ing;if(!(ing>0)){$('calc-flow').innerHTML='<h3>Del ingreso al impuesto</h3><p class="note">Escriba sus ingresos para ver el recorrido.</p>';return;}
+    var cur=ing,rows=[];
+    function row(label,v,cls,left,w){rows.push('<div class="frow"><span>'+label+'</span><div class="ftrack"><i class="fbar '+cls+'" style="left:'+(left/ing*100)+'%;width:'+Math.max(0.6,w/ing*100)+'%"></i></div><span class="v">'+cop(v)+'</span></div>');}
+    row('Ingresos del año',ing,'fb-in',0,ing);
+    var dd=[['Aportes a salud y pensión',p.incr],['Gastos de representación exentos',r.ex7],['Exentas y deducciones (hasta el cupo)',r.usado],['Dependientes y 1% de facturas',r.dep+r.fe]];
+    dd.forEach(function(x){if(x[1]>0){cur-=x[1];row('(−) '+x[0],x[1],'fb-out',Math.max(0,cur),x[1]);}});
+    row('= Base sobre la que se calcula',r.rlg,'fb-base',0,r.rlg);
+    row('Impuesto de renta',r.imp,'fb-tax',0,r.imp);
+    $('calc-flow').innerHTML='<h3>Del ingreso al impuesto</h3><p class="note">Cada barra es un porcentaje de lo que usted ganó. Lo que sobra al final es la base gravable, y el impuesto es una parte de esa base.</p>'+rows.join('');
+  }
+  function renderSl(){
+    var u=U(),p=readS(),r=compute(p,u),v=parseInt($('sl').value,10)||0,q=compute(Object.assign({},p,{afc:r.afc+v}),u);
+    $('sl-out').innerHTML='<div><span>Aporte adicional</span><b>'+cop(v)+'</b></div><div><span>Impuesto con ese aporte</span><b>'+cop(q.imp)+'</b></div><div><span>Ahorro frente a hoy</span><b style="color:var(--ok)">'+cop(r.imp-q.imp)+'</b></div>';
+  }
+  function setupSl(p,u,r,closed){
+    var x=maxExtraAfc(p,u,r),sl=$('sl');
+    $('sl-card').hidden=closed;
+    if(x<=0){sl.max=0;sl.value=0;sl.disabled=true;}else{sl.disabled=false;sl.max=x;sl.step=x>=2000000?100000:10000;if(+sl.value>x)sl.value=x;}
+    renderSl();
+  }
+  var W={step:0,profile:'emp'};
+  var WSTEPS=6;
+  function wizApply(){
+    var pagos=parseInt($('w-pagos').value,10)||12,anual=val('w-mes')*pagos;
+    $('w-anual').textContent=cop(anual);
+    incrAuto=true;
+    setMoney('s-ing',anual);setMoney('s-incr',anual*0.08);setMoney('d-ing',anual);
+    setMoney('s-viv',val('w-viv'));setMoney('s-prep',val('w-prep'));setMoney('s-afc',val('w-afc'));setMoney('s-com',val('w-fact'));setMoney('s-ret',val('w-ret'));
+    setMoney('d-pat',val('w-pat'));setMoney('d-tar',val('w-tar'));setMoney('d-com',val('w-comp'));setMoney('d-con',val('w-con'));
+    $('s-dep').value=$('w-dep').value;$('d-iva').checked=$('w-iva').checked;
+    $('s-cargo').value=W.profile==='srv'?$('w-cargo').value:'0';
+    setMoney('s-sal',0);
+    changed();
+  }
+  function wizShow(){
+    document.querySelectorAll('.wstep').forEach(function(e){e.hidden=parseInt(e.getAttribute('data-s'),10)!==W.step;});
+    $('w-lbl').textContent=W.step<5?('Paso '+(W.step+1)+' de 5'):'Su resultado';
+    $('w-bar').style.width=(Math.min(W.step,5)/5*100)+'%';
+    $('w-back').hidden=W.step===0;$('w-back').textContent=W.step===5?'Cambiar respuestas':'Atrás';
+    $('w-next').hidden=W.step===5;$('w-next').textContent=W.step===4?'Ver mi resultado':'Siguiente';
+    $('w-cargowrap').hidden=W.profile!=='srv';$('w-indnote').hidden=W.profile!=='ind';
+    document.querySelectorAll('[data-profile]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-profile')===W.profile?'true':'false');});
+    if(W.step===5){wizApply();}
+  }
+  function wizResult(p,u,r,dc,pl,closed){
+    if(W.step!==5||!$('w-result'))return;
+    var h='<div class="say">'+plain(p,u,r,dc,pl,closed)+'</div><div class="bullets">';
+    h+='<div>Su renta líquida gravable sería de <b>'+cop(r.rlg)+'</b> ('+nf1.format(r.rlg/u)+' UVT).</div>';
+    h+='<div>Está usando el <b>'+(r.cupo?Math.round(r.usado/r.cupo*100):0)+'%</b> de su cupo de exentas y deducciones.</div>';
+    if(p.ret)h+='<div>'+(r.imp-p.ret>=0?'Le tocaría pagar un saldo de <b>'+cop(r.imp-p.ret)+'</b> después de retenciones.':'Tendría un saldo a favor de <b>'+cop(p.ret-r.imp)+'</b>.')+'</div>';
+    h+='<div>Debe revisar que tenga los soportes de cada beneficio antes de presentar.</div></div>';
+    h+='<div class="btns"><button type="button" class="btn primary" data-go="plan">Ver mi plan de acción</button><button type="button" class="btn" data-go="calculo">Ver cómo se calculó</button><button type="button" class="btn" data-go="anticipo">Ver mi anticipo</button><button type="button" class="btn" data-go="revision">Revisión final</button></div>';
+    $('w-result').innerHTML=h;
   }
 
   function copySummary(){
@@ -567,7 +755,7 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
     var cur=document.querySelector('#nav a[aria-current="true"]');if(cur&&cur.scrollIntoView)try{cur.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}}
   document.querySelectorAll('#nav a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();go(a.getAttribute('data-sec'));});});
   document.addEventListener('click',function(e){var g=e.target.closest&&e.target.closest('[data-go]');if(g){e.preventDefault();go(g.getAttribute('data-go'));}});
-  var SECS=['resumen','datos','plan','calculo','anticipo','revision','consulta'];
+  var SECS=['guia','resumen','datos','plan','calculo','anticipo','revision','consulta'];
   function spy(){
     setHdr();var y=($('hdr').offsetHeight||100)+30,cur=SECS[0];
     SECS.forEach(function(id){var el=$(id);if(el&&el.getBoundingClientRect().top<=y)cur=id;});
@@ -598,10 +786,19 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
   $('c-list').addEventListener('change',function(e){var c=e.target.getAttribute&&e.target.getAttribute('data-c');if(!c)return;mem[c]=e.target.checked;saveChk();updChk();});
   $('c-reset').addEventListener('click',function(){mem={};saveChk();renderChk();});
 
+
+  /* ----- Eventos del asistente ----- */
+  ['w-mes','w-viv','w-prep','w-afc','w-fact','w-pat','w-tar','w-comp','w-con','w-ret'].forEach(function(id){$(id).addEventListener('input',wizApply);});
+  ['w-pagos','w-dep','w-iva','w-cargo'].forEach(function(id){$(id).addEventListener('change',wizApply);});
+  document.querySelectorAll('[data-profile]').forEach(function(b){b.addEventListener('click',function(){W.profile=b.getAttribute('data-profile');wizShow();if(val('w-mes')>0)wizApply();});});
+  $('w-next').addEventListener('click',function(){if(W.step<5){W.step++;wizShow();var w=$('wiz');if(w&&w.scrollIntoView&&W.step===5)go('guia');}});
+  $('w-back').addEventListener('click',function(){if(W.step>0){W.step=W.step===5?1:W.step-1;wizShow();}});
+  $('sl').addEventListener('input',renderSl);
+
   /* ----- Inicio ----- */
   if(loadForm()){exampleMode=false;}else{fillSample();}
   $('y2025').setAttribute('aria-pressed',year===2025?'true':'false');$('y2026').setAttribute('aria-pressed',year===2026?'true':'false');
-  loadChk();renderChk();renderTablas();renderAll();setHdr();spy();
+  loadChk();renderChk();renderTablas();renderAll();wizShow();setHdr();spy();
 })();
 </script>
 </body></html>
